@@ -19,10 +19,15 @@ var msgid_gen = (function() {
     }
 })()
 
-exports.createClient = function(port, host) {
-    debug(util.format('{ "port": "%d", "host": "%s"}', port, host))
-    var socket = net.createConnection((port || 9199), (host || 'localhost'), function() {
-            debug('conneted');
+exports.createClient = function() {
+    debug(util.format('{ "port": "%j", "host": "%j" }', arguments[0], arguments[1]))
+    var port = arguments[0] || 9199
+      , host = arguments[1] || 'localhost'
+      , socket = net.createConnection(port, host, function() {
+            debug('connected');
+            this.on('connect', function() {
+                debug('reconnected');
+            })
         }).on('end', function() {
             debug('disconnected');
         })
@@ -40,11 +45,21 @@ exports.createClient = function(port, host) {
     return {
         close: function() {
             socket.end();
+            this.closed = true;
+            debug('closed');
         }
+      , closed: false
       , call: function(method, params, callback) {
+            if (this.closed) throw new Error('closed');
+            if (socket.destroyed) socket.connect(port, host)
             var msgid = msgid_gen.next()
             callbacks[msgid] = callback;
             stream.send([0, msgid, method, params]);
+        }
+      , notify: function(method, params) {
+            if (this.closed) throw new Error('closed');
+            if (socket.destroyed) socket.connect(port, host)
+            stream.send([2, method, params]);
         }
     }
 }
