@@ -1,6 +1,7 @@
 {
     "name": "jubatus-tutorial-node"
   , "version": "0.0.1"
+  , "homepage": "https://github.com/naokikimura/jubatus-tutorial-node"
   , "dependencies": {
         "msgpack": "*"
       , "lazy": "*"
