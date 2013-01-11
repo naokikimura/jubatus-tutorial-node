@@ -6,6 +6,7 @@ var msgpack = require('msgpack')
   , util = require('util')
   , lazy = require('lazy')
   , async = require('async')
+  , argv = require('argv')
 
 var debug;
 if (process.env.NODE_DEBUG && /tutorial/.test(process.env.NODE_DEBUG)) {
@@ -21,7 +22,7 @@ function get_most_likely(estimate_results) {
 }
 
 var msgid_gen = (function() {
-    var MAX = Math.pow(2, 32) -1
+    var MAX = Math.pow(2, 32) - 1
       , msgid = 0;
     return {
         next: function() {
@@ -31,6 +32,7 @@ var msgid_gen = (function() {
 })()
 
 var createClient = function(port, host) {
+    debug(util.format('{ "port": "%d", "host": "%s"}', port, host))
     var socket = net.createConnection((port || 9199), (host || 'localhost'), function() {
             debug('conneted');
         }).on('end', function() {
@@ -59,9 +61,18 @@ var createClient = function(port, host) {
     }
 }
 
-var host = 'localhost'
-  , port = 9199
-  , name = 'tutorial'
+var options = [
+        { name: 'server_ip', short: 's', type: 'string', description: 'server_ip' }
+      , { name: 'server_port', short: 'p', type: 'int', description: 'server_port' }
+      , { name: 'name', short: 'n', type: 'string', description: 'name' }
+    ]
+  , args = argv.option([options]).run();
+
+debug(args)
+
+var host = args.options.server_ip
+  , port = args.options.server_port
+  , name = args.options.name || 'tutorial'
 
 var client = createClient(port, host)
 
