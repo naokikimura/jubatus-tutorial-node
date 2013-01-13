@@ -32,6 +32,7 @@ debug(args)
 var host = args.options.server_ip
   , port = args.options.server_port
   , name = args.options.name || 'tutorial'
+  , concurrency = 10
 
 var client = rpc.createClient(port, host)
 
@@ -43,22 +44,25 @@ async.series([
         client.call('get_status', [name], callback)
     }
   , function(callback) {
-        var is = fs.createReadStream('train.dat').on('open', function() {
-            debug('train start')
-        }).on('end', function() {
+        var q = async.queue(function(task, callback) {
+            var message = fs.readFileSync(task.file).toString()
+              , datum = [[ ["message", message ] ], []]
+              , data =[ [task.label, datum] ]
+            client.call('train', [name, data], callback);
+        }, concurrency)
+        q.drain = function() {
             debug('train end')
             callback(null)
+        }
+        var is = fs.createReadStream('train.dat').on('open', function() {
+            debug('train start')
         })
-        lazy(is).lines.map(function(line) {
+        lazy(is).lines.forEach(function(line) {
             var row = line.toString().split(/,/)
-              , label = row[0]
-              , file = row[1]
-              , message = fs.readFileSync(file).toString()
-              , datum = [[ ["message", message ] ], []]
-            return [ [label, datum] ]
-        }).forEach(function(data) {
-            client.call('train', [name, data]);
-            client.call('get_status', [name])
+              , task = { label: row.shift(), file: row.shift() }
+            q.push(task, function(error) {
+                client.call('get_status', [name])
+            })
         })
     }
   , function(callback) {
@@ -71,29 +75,29 @@ async.series([
         client.call('get_status', [name], callback)
     }
   , function(callback) {
-        var is = fs.createReadStream('test.dat').on('open', function() {
-            debug('classify start')
-        }).on('end', function() {
+        var q = async.queue(function(task, callback) {
+            var message = fs.readFileSync(task.file).toString()
+              , datum = [[ ["message", message ] ], []]
+              , data =[ datum ]
+            client.call('classify', [name, data], callback);
+        }, 3)
+        q.drain = function() {
             debug('classify end')
             callback(null)
+        }
+        var is = fs.createReadStream('test.dat').on('open', function() {
+            debug('classify start')
         })
-        lazy(is).lines.map(function(line) {
+        lazy(is).lines.forEach(function(line) {
             var row = line.toString().split(/,/)
-              , label = row[0]
-              , file = row[1]
-              , message = fs.readFileSync(file).toString()
-              , datum = [[ ["message", message ] ], []]
-            return { label: label, datum: datum }
-        }).forEach(function(o) {
-            var label = o.label
-              , data = [ o.datum ]
-            client.call('classify', [name, data], function(error, resultset) {
+              , task = { label: row.shift(), file: row.shift() }
+            q.push(task, function(error, resultset) {
                 resultset.forEach(function(estimate_results) {
                     var estimate_result = get_most_likely(estimate_results)
-                      , result = estimate_result[0] === label ? 'OK' : 'NG'
-                    console.info('%s,%s,%s,%d', result, label, estimate_result[0], estimate_result[1]);
+                      , result = estimate_result[0] === task.label ? 'OK' : 'NG'
+                    console.info('%s,%s,%s,%d', result, task.label, estimate_result[0], estimate_result[1]);
                 })
-            });
+            })
         })
     }
 ], function(error) {
