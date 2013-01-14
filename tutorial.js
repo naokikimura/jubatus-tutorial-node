@@ -45,10 +45,12 @@ async.series([
     }
   , function(callback) {
         var q = async.queue(function(task, callback) {
-            var message = fs.readFileSync(task.file).toString()
-              , datum = [[ ["message", message ] ], []]
-              , data =[ [task.label, datum] ]
-            client.call('train', [name, data], callback);
+            fs.readFile(task.file, function(error, buffer) {
+                var message = buffer.toString()
+                  , datum = [[ ["message", message ] ], []]
+                  , data =[ [task.label, datum] ]
+                client.call('train', [name, data], callback);
+            })
         }, concurrency)
         q.drain = function() {
             debug('train end')
@@ -76,10 +78,12 @@ async.series([
     }
   , function(callback) {
         var q = async.queue(function(task, callback) {
-            var message = fs.readFileSync(task.file).toString()
-              , datum = [[ ["message", message ] ], []]
-              , data =[ datum ]
-            client.call('classify', [name, data], callback);
+            fs.readFile(task.file, function(error, buffer) {
+                var message = buffer.toString()
+                  , datum = [[ ["message", message ] ], []]
+                  , data =[ datum ]
+               client.call('classify', [name, data], callback);
+            })
         }, 3)
         q.drain = function() {
             debug('classify end')
