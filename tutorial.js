@@ -38,16 +38,24 @@ var client = rpc.createClient(port, host)
 
 async.series([
     function(callback) {
-        client.call('get_config', [name], callback);
+        client.call('get_config', [name], function(error, result) {
+            debug(result)
+            callback(error)
+        })
     }
   , function(callback) {
-        client.call('get_status', [name], callback)
+        client.call('get_status', [name], function(error, result) {
+            debug(result)
+            callback(error)
+        })
     }
   , function(callback) {
         var q = async.queue(function(task, callback) {
             fs.readFile(task.file, function(error, buffer) {
+                if (error) throw error;
+
                 var message = buffer.toString()
-                  , datum = [[ ["message", message ] ], []]
+                  , datum = [[ ['message', message] ], []]
                   , data =[ [task.label, datum] ]
                 client.call('train', [name, data], callback);
             })
@@ -62,25 +70,40 @@ async.series([
         lazy(is).lines.forEach(function(line) {
             var row = line.toString().split(/,/)
               , task = { label: row.shift(), file: row.shift() }
-            q.push(task, function(error) {
-                client.call('get_status', [name])
-            })
+            q.push(task)
         })
     }
   , function(callback) {
-        client.call('save', [name, 'tutorial'], callback)
+        client.call('get_status', [name], function(error, result) {
+            debug(result)
+            callback(error)
+        })
     }
   , function(callback) {
-        client.call('load', [name, 'tutorial'], callback)
+        client.call('save', [name, 'tutorial'], function(error, result) {
+            debug(result)
+            callback(error)
+        })
     }
   , function(callback) {
-        client.call('get_status', [name], callback)
+        client.call('load', [name, 'tutorial'], function(error, result) {
+            debug(result)
+            callback(error)
+        })
+    }
+  , function(callback) {
+        client.call('get_config', [name], function(error, result) {
+            debug(result)
+            callback(error)
+        })
     }
   , function(callback) {
         var q = async.queue(function(task, callback) {
             fs.readFile(task.file, function(error, buffer) {
+                if (error) throw error;
+
                 var message = buffer.toString()
-                  , datum = [[ ["message", message ] ], []]
+                  , datum = [[ ['message', message] ], []]
                   , data =[ datum ]
                client.call('classify', [name, data], callback);
             })
