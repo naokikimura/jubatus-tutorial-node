@@ -6,6 +6,7 @@ lib-cov
 *.out
 *.pid
 *.gz
+*.swp
 
 pids
 logs
@@ -14,3 +15,8 @@ results
 npm-debug.log
 
 node_modules
+
+20news-bydate-test/
+20news-bydate-train/
+
+.DS_Store
