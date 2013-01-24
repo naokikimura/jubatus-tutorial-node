@@ -17,7 +17,7 @@ if (process.env.NODE_DEBUG && /tutorial/.test(process.env.NODE_DEBUG)) {
 function get_most_likely(estimate_results) {
     return estimate_results.reduce(function(previous, current) {
         return previous[1] > current[1] ? previous : current;
-    })
+    }, [, Number.NaN])
 }
 
 var options = [
