@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var rpc = require('./msgpack-rpc')
+var jubatus = require('./jubatus')
   , fs = require('fs')
   , util = require('util')
   , lazy = require('lazy')
@@ -17,7 +17,7 @@ if (process.env.NODE_DEBUG && /tutorial/.test(process.env.NODE_DEBUG)) {
 function get_most_likely(estimate_results) {
     return estimate_results.reduce(function(previous, current) {
         return previous[1] > current[1] ? previous : current;
-    }, [, Number.NaN])
+    })
 }
 
 var options = [
@@ -34,17 +34,17 @@ var host = args.options.server_ip
   , name = args.options.name || 'tutorial'
   , concurrency = 10
 
-var client = rpc.createClient(port, host)
+var client = new jubatus.Classifier(port, host)
 
 async.series([
     function(callback) {
-        client.call('get_config', [name], function(error, result) {
+        client.get_config([name], function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        client.call('get_status', [name], function(error, result) {
+        client.get_status([name], function(error, result) {
             debug(result)
             callback(error)
         })
@@ -57,7 +57,7 @@ async.series([
                 var message = buffer.toString()
                   , datum = [[ ['message', message] ], []]
                   , data =[ [task.label, datum] ]
-                client.call('train', [name, data], callback);
+                client.train([name, data], callback);
             })
         }, concurrency)
         q.drain = function() {
@@ -74,25 +74,25 @@ async.series([
         })
     }
   , function(callback) {
-        client.call('get_status', [name], function(error, result) {
+        client.get_status([name], function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        client.call('save', [name, 'tutorial'], function(error, result) {
+        client.save([name, 'tutorial'], function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        client.call('load', [name, 'tutorial'], function(error, result) {
+        client.load([name, 'tutorial'], function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        client.call('get_config', [name], function(error, result) {
+        client.get_config([name], function(error, result) {
             debug(result)
             callback(error)
         })
@@ -105,7 +105,7 @@ async.series([
                 var message = buffer.toString()
                   , datum = [[ ['message', message] ], []]
                   , data =[ datum ]
-               client.call('classify', [name, data], callback);
+               client.classify([name, data], callback);
             })
         }, 3)
         q.drain = function() {
