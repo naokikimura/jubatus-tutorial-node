@@ -21,7 +21,7 @@ var msgid_gen = (function() {
 
 exports.createClient = function() {
     debug(util.format('{ "port": "%j", "host": "%j" }', arguments[0], arguments[1]))
-    var port = arguments[0] || 9199
+    var port = arguments[0]
       , host = arguments[1] || 'localhost'
       , socket = net.createConnection(port, host, function() {
             debug('connected');
