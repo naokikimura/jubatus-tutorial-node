@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var jubatus = require('./jubatus')
+var jubatus = require('./lib/jubatus')
   , fs = require('fs')
   , util = require('util')
   , lazy = require('lazy')
