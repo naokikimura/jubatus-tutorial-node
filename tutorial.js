@@ -39,13 +39,13 @@ var classifier = new client.Classifier(port, host)
 
 async.series([
     function(callback) {
-        classifier.get_config([name], function(error, result) {
+        classifier.get_config(name, function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        classifier.get_status([name], function(error, result) {
+        classifier.get_status(name, function(error, result) {
             debug(result)
             callback(error)
         })
@@ -58,7 +58,7 @@ async.series([
                 var message = buffer.toString()
                   , datum = [[ ['message', message] ], []]
                   , data =[ [task.label, datum] ]
-                classifier.train([name, data], callback);
+                classifier.train(name, data, callback);
             })
         }, concurrency)
         q.drain = function() {
@@ -75,25 +75,25 @@ async.series([
         })
     }
   , function(callback) {
-        classifier.get_status([name], function(error, result) {
+        classifier.get_status(name, function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        classifier.save([name, 'tutorial'], function(error, result) {
+        classifier.save(name, 'tutorial', function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        classifier.load([name, 'tutorial'], function(error, result) {
+        classifier.load(name, 'tutorial', function(error, result) {
             debug(result)
             callback(error)
         })
     }
   , function(callback) {
-        classifier.get_config([name], function(error, result) {
+        classifier.get_config(name, function(error, result) {
             debug(result)
             callback(error)
         })
@@ -106,7 +106,7 @@ async.series([
                 var message = buffer.toString()
                   , datum = [[ ['message', message] ], []]
                   , data =[ datum ]
-               classifier.classify([name, data], callback);
+               classifier.classify(name, data, callback);
             })
         }, 3)
         q.drain = function() {
