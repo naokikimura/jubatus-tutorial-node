@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var jubatus = require('./lib/jubatus')
+var jubatus = require('jubatus-node-client')
   , client = jubatus.classifier.client
   , fs = require('fs')
   , util = require('util')
