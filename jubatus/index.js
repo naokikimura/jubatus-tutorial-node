@@ -1,5 +1,5 @@
 var api = require('./api')
-  , rpc = require('../msgpack-rpc')
+  , rpc = require('./msgpack-rpc')
 
 var debug;
 if (process.env.NODE_DEBUG && /jubatus/.test(process.env.NODE_DEBUG)) {
