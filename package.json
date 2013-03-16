@@ -1,6 +1,6 @@
 {
     "name": "jubatus-tutorial-node"
-  , "version": "0.0.1"
+  , "version": "0.4.2"
   , "private": true
   , "homepage": "https://github.com/naokikimura/jubatus-tutorial-node"
   , "main": "./tutorial.js"
