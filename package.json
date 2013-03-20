@@ -12,7 +12,7 @@
       , "url" : "https://github.com/naokikimura/jubatus-tutorial-node.git"
     }
   , "dependencies": {
-        "jubatus-node-client": "git+https://github.com/naokikimura/jubatus-node-client.git"
+        "jubatus": "*"
       , "lazy": "*"
       , "async": "*"
       , "argv": "*"
