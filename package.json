@@ -1,6 +1,6 @@
 {
     "name": "jubatus-tutorial-node"
-  , "version": "0.4.2"
+  , "version": "0.5.1"
   , "private": true
   , "homepage": "https://github.com/naokikimura/jubatus-tutorial-node"
   , "main": "./tutorial.js"
@@ -12,9 +12,9 @@
       , "url" : "https://github.com/naokikimura/jubatus-tutorial-node.git"
     }
   , "dependencies": {
-        "jubatus": "*"
-      , "lazy": "*"
-      , "async": "*"
-      , "argv": "*"
+        "jubatus": "^0.5.1"
+      , "lazy": "^1.0.11"
+      , "async": "^2.6.0"
+      , "argv": "^0.0.2"
     }
 }

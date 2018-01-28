@@ -1,8 +1,6 @@
 jubatus-tutorial-node
 =====================
 
-see http://jubat.us/en/tutorial.html
-
 Quick Start
 --------------------
 

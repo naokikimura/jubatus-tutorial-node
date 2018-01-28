@@ -34,13 +34,13 @@ var host = args.options.server_ip,
 
 async.series([
     function (callback) {
-        classifier.get_config(name, function (error, result) {
+        classifier.getConfig(function (error, result) {
             debug(result);
             callback(error);
         });
     },
     function (callback) {
-        classifier.get_status(name, function (error, result) {
+        classifier.getStatus(function (error, result) {
             debug(result);
             callback(error);
         });
@@ -59,7 +59,7 @@ async.series([
                         label = task.label,
                         datum = [string_values, num_values],
                         data = [ [label, datum] ];
-                    classifier.train(name, data, callback);
+                    classifier.train(data, callback);
                 });
             },
             q = async.queue(worker, concurrency),
@@ -102,25 +102,25 @@ async.series([
             });
     },
     function (callback) {
-        classifier.get_status(name, function (error, result) {
+        classifier.getStatus(function (error, result) {
             debug(result);
             callback(error);
         });
     },
     function (callback) {
-        classifier.save(name, id, function (error, result) {
+        classifier.save(id, function (error, result) {
             debug(result);
             callback(error);
         });
     },
     function (callback) {
-        classifier.load(name, id, function (error, result) {
+        classifier.load(id, function (error, result) {
             debug(result);
             callback(error);
         });
     },
     function (callback) {
-        classifier.get_config(name, function (error, result) {
+        classifier.getConfig(function (error, result) {
             debug(result);
             callback(error);
         });
@@ -138,7 +138,7 @@ async.series([
                         label = task.label,
                         datum = [string_values, num_values],
                         data = [ datum ];
-                    classifier.classify(name, data, function (error, resultset) {
+                    classifier.classify(data, function (error, resultset) {
                         if (error) {
                             callback(error);
                             return;
@@ -194,5 +194,5 @@ async.series([
         console.error(error.stack || error);
         process.exit(1);
     }
-    classifier.get_client().close();
+    classifier.getClient().close();
 });
