@@ -2,15 +2,11 @@ language: node_js
 node_js:
 - 6
 sudo: required
-addons:
-  apt:
-    sources:
-      - sourceline: deb http://download.jubat.us/apt/ubuntu/trusty binary/
+services:
+  - docker
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y --allow-unauthenticated jubatus
-  - source /opt/jubatus/profile
-  - jubaclassifier -D -f config.json
+  - docker pull jubatus/jubatus
+  - docker run --expose 9199 -v .:/opt/jubatus-tutorial-node jubatus/jubatus jubaclassifier -f /opt/jubatus-tutorial-node/config.json
   - curl -SsO http://people.csail.mit.edu/jrennie/20Newsgroups/20news-bydate.tar.gz
   - tar -xzf 20news-bydate.tar.gz
   - sudo apt-get install jq
