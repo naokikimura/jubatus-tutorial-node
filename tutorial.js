@@ -92,7 +92,7 @@ classifier.getConfig().then(result => {
     debug(results);
 
     results.forEach(result => {
-        console.log(result);
+        console.log(JSON.stringify(result));
     });
 
     classifier.getClient().close();
