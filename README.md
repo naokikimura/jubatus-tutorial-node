@@ -1,6 +1,7 @@
 jubatus-tutorial-node
 =====================
 
+[![Build Status](https://travis-ci.org/naokikimura/jubatus-tutorial-node.svg?branch=master)](https://travis-ci.org/naokikimura/jubatus-tutorial-node)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3f911234639f46f28ff414bbd513dfdb)](https://www.codacy.com/app/n.kimura.cap/jubatus-tutorial-node?utm_source=github.com&utm_medium=referral&utm_content=naokikimura/jubatus-tutorial-node&utm_campaign=badger)
 
 See [Jubatus Basic Tutorial](http://jubat.us/en/tutorial/tutorial.html)
