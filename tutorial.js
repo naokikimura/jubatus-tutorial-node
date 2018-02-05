@@ -14,8 +14,7 @@ Object.defineProperty(debug, 'enabled', { get() { return enabled; } });
 const args = minimist(process.argv.slice(2), { p: 9199, h: 'localhost', n: '', t: 0 });
 debug(args);
 
-const { p: port, h: host, n: name, t: timeout } = args;
-    id = 'tutorial',
+const { p: port, h: host, n: name, t: timeout } = args,
     classifier = new jubatus.classifier.client.Classifier(port, host, name, timeout);
 
 classifier.getConfig().then(result => {
