@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+- 6
+sudo: required
+addons:
+  apt:
+    sources:
+      - sourceline: deb http://download.jubat.us/apt/ubuntu/trusty binary/
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y --allow-unauthenticated jubatus
+  - source /opt/jubatus/profile
+script:
+  - jubaclassifier -D -f config.json
+  - node tutorial.js
