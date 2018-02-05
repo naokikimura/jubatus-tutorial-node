@@ -1,16 +1,35 @@
 jubatus-tutorial-node
 =====================
 
+See [Jubatus Basic Tutorial](http://jubat.us/en/tutorial/tutorial.html)
+
 Quick Start
 --------------------
 
-    git clone git://github.com/naokikimura/jubatus-tutorial-node.git
-    cd jubatus-tutorial-node
-    npm install
+```bash
+git clone https://github.com/naokikimura/jubatus-tutorial-node.git
+cd jubatus-tutorial-node
 
-    curl -O http://people.csail.mit.edu/jrennie/20Newsgroups/20news-bydate.tar.gz
-    tar -xvzf 20news-bydate.tar.gz
+# install Node.js (Mac OS X)
+# brew install node
+npm install
 
-    jubaclassifier --configpath=config.json --name=tutorial &
+curl -O http://people.csail.mit.edu/jrennie/20Newsgroups/20news-bydate.tar.gz
+tar -xvzf 20news-bydate.tar.gz
 
-    node tutorial.js
+# install Jubatus (Mac OS X)
+# brew tap jubatus/jubatus
+# brew install jubatus --use-clang
+jubaclassifier -D -f config.json
+
+node tutorial.js
+```
+
+## Requires ##
+
+- [Jubatus](http://jubat.us/en/)
+- [Node.js](https://nodejs.or]) v6+
+
+## See alse ##
+
+- https://github.com/naokikimura/jubatus-node-client
