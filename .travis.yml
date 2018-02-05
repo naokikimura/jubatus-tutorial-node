@@ -10,6 +10,8 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y --allow-unauthenticated jubatus
   - source /opt/jubatus/profile
-script:
   - jubaclassifier -D -f config.json
+  - curl -O http://people.csail.mit.edu/jrennie/20Newsgroups/20news-bydate.tar.gz
+  - tar -xvzf 20news-bydate.tar.gz
+script:
   - node tutorial.js
