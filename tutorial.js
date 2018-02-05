@@ -1,198 +1,105 @@
 #!/usr/bin/env node
 
-var jubatus = require('jubatus'),
-    client = jubatus.classifier.client,
-    fs = require('fs'),
-    util = require('util'),
-    lazy = require('lazy'),
-    async = require('async'),
-    argv = require('argv');
+const fs = require('fs');
+const readline = require('readline');
+const util = require('util');
+const jubatus = require('jubatus');
+const minimist = require('minimist');
 
-var isDebugEnabled = process.env.NODE_DEBUG && /tutorial/.test(process.env.NODE_DEBUG),
-    debug = isDebugEnabled ? function (x) { console.error('TUTORIAL:', x); } : function () {};
+const debug = util.debuglog('jubatus-tutorial-node');
+const { env: { DEBUG } } = (global.process || { env: {} });
+const enabled = /\jubatus-tutorial-node\b/.test(DEBUG);
+Object.defineProperty(debug, 'enabled', { get() { return enabled; } });
 
-function getMostLikely(estimateResults) {
-    return estimateResults.reduce(function (previous, current) {
-        return previous[1] > current[1] ? previous : current;
-    }, [null, NaN]);
-}
-
-var options = [
-        { name: 'server_ip', 'short': 's', type: 'string', description: 'server_ip' },
-        { name: 'server_port', 'short': 'p', type: 'int', description: 'server_port' },
-        { name: 'name', 'short': 'n', type: 'string', description: 'name' }
-    ],
-    args = argv.option([options]).run();
+const args = minimist(process.argv.slice(2), { p: 9199, h: 'localhost', n: '', t: 0 });
 debug(args);
 
-var host = args.options.server_ip,
-    port = args.options.server_port,
-    name = args.options.name || 'tutorial',
+const { p: port, h: host, n: name, t: timeout } = args;
     id = 'tutorial',
-    concurrency = 10,
-    classifier = new client.Classifier(port, host);
+    classifier = new jubatus.classifier.client.Classifier(port, host, name, timeout);
 
-async.series([
-    function (callback) {
-        classifier.getConfig(function (error, result) {
-            debug(result);
-            callback(error);
-        });
-    },
-    function (callback) {
-        classifier.getStatus(function (error, result) {
-            debug(result);
-            callback(error);
-        });
-    },
-    function (callback) {
-        var worker = function (task, callback) {
-                fs.readFile(task.file, function (error, buffer) {
-                    if (error) {
-                        callback(error);
-                        return;
-                    }
+classifier.getConfig().then(result => {
+    debug(result);
 
-                    var message = buffer.toString(),
-                        string_values = [ ['message', message] ],
-                        num_values = [],
-                        label = task.label,
-                        datum = [string_values, num_values],
-                        data = [ [label, datum] ];
-                    classifier.train(data, callback);
-                });
-            },
-            q = async.queue(worker, concurrency),
-            stream = fs.createReadStream('train.dat')
-                .on('open', function () {
-                    debug('train start');
-                })
-                .on('close', function () {
-                    debug('stream closed');
-                    var running = q.running(),
-                        length = q.length(),
-                        drains = (running + length) === 0,
-                        finish = function () {
-                            debug('train end');
-                            callback(null);
-                        };
-                    debug({ running: running, length: length, drains: drains });
-                    if (drains) {
-                        finish();
-                    } else {
-                        q.drain = function () {
-                            debug('drained');
-                            finish();
-                        };
-                    }
-                });
-        q.drain = function () {
-            debug('drained');
-        };
-        lazy(stream)
-            .lines
-            .filter(function (buffer) { return buffer; })
-            .map(function (buffer) {
-                return buffer.toString();
-            })
-            .forEach(function (line) {
-                var row = line.split(/,/),
-                    task = { label: row.shift(), file: row.shift() };
-                q.push(task);
+    return classifier.getStatus();
+}).then(result => {
+    debug(result);
+
+    // train
+
+    const results = [];
+    return new Promise((resolve, reject) => {
+        readline.createInterface({ input: fs.createReadStream('train.dat') })
+        .on('line', line => {
+            debug(line);
+
+            const [ label, file ] = line.split(/,/, 2);
+            fs.readFile(file, (error, buffer) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    const message = buffer.toString();
+                    const stringValues = [ [ 'message', message ] ];
+                    const datum = [ stringValues ];
+                    const labeledDatum = [ label, datum ];
+                    const data = [ labeledDatum ];
+                    results.push(classifier.train(data));
+                }
             });
-    },
-    function (callback) {
-        classifier.getStatus(function (error, result) {
-            debug(result);
-            callback(error);
+        })
+        .on('close', () => {
+            resolve(Promise.all(results));
         });
-    },
-    function (callback) {
-        classifier.save(id, function (error, result) {
-            debug(result);
-            callback(error);
-        });
-    },
-    function (callback) {
-        classifier.load(id, function (error, result) {
-            debug(result);
-            callback(error);
-        });
-    },
-    function (callback) {
-        classifier.getConfig(function (error, result) {
-            debug(result);
-            callback(error);
-        });
-    },
-    function (callback) {
-        var worker = function (task, callback) {
-                fs.readFile(task.file, function (error, buffer) {
-                    if (error) {
-                        callback(error);
-                        return;
-                    }
-                    var message = buffer.toString(),
-                        string_values = [ ['message', message] ],
-                        num_values = [],
-                        label = task.label,
-                        datum = [string_values, num_values],
-                        data = [ datum ];
-                    classifier.classify(data, function (error, resultset) {
-                        if (error) {
-                            callback(error);
-                            return;
-                        }
-                        resultset.forEach(function (estimates) {
-                            var estimate = getMostLikely(estimates),
-                                result = estimate[0] === label ? 'OK' : 'NG';
-                            console.info('%s,%s,%s,%d', result, label, estimate[0], estimate[1]);
+    });
+}).then(responses => {
+    const count = responses.map(([ result, msgid ]) => result).reduce((accumulator, current) => accumulator + current);
+    debug(`train result: ${ count }`);
+
+    // classify
+
+    const results = [];
+    return new Promise((resolve, reject) => {
+        const stream = fs.createReadStream('test.dat');
+        readline.createInterface({ input: stream })
+        .on('line', line => {
+            debug(line);
+
+            const [ label, file ] = line.split(/,/, 2);
+            fs.readFile(file, (error, buffer) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    const message = buffer.toString();
+                    const data = [ [ [ [ 'message', message ] ] ] ];
+                    const promise = classifier.classify(data).then(response => {
+                        debug(response);
+                        const [ result, msgid ] = response;
+                        return result.map(estimates => {
+                            const mostLikely = estimates
+                                .map(([ label, score ]) => ({ label, score }))
+                                .reduce((accumulator, current) => current.score > accumulator.score ? current : accumulator);
+                            return ({ label, mostLikely, valid : mostLikely.label === label });
                         });
-                        callback(null);
                     });
-                });
-            },
-            q = async.queue(worker, concurrency),
-            stream = fs.createReadStream('test.dat')
-                .on('open', function () {
-                    debug('classify start');
-                })
-                .on('close', function () {
-                    debug('stream closed');
-                    var running = q.running(),
-                        length = q.length(),
-                        drains = (running + length) === 0,
-                        finish = function () {
-                            debug('classify end');
-                            callback(null);
-                        };
-                    debug({ running: running, length: length, drains: drains });
-                    if (drains) {
-                        finish();
-                    } else {
-                        q.drain = function () {
-                            debug('drained');
-                            finish();
-                        };
-                    }
-                });
-        q.drain = function () {
-            debug('drained');
-        };
-        lazy(stream)
-            .lines
-            .filter(function (buffer) { return buffer; })
-            .map(function (buffer) { return buffer.toString(); })
-            .forEach(function (line) {
-                var row = line.split(/,/),
-                    task = { label: row.shift(), file: row.shift() };
-                q.push(task);
+                    results.push(promise);
+                }
             });
-    }
-], function (error) {
-    if (error) {
-        console.error(error.stack || error);
-        process.exit(1);
-    }
+        })
+        .on('close', () => {
+            resolve(Promise.all(results));
+        });
+    });
+}).then(results => {
+    debug(results);
+
+    results.forEach(result => {
+        console.log(result);
+    });
+
     classifier.getClient().close();
+    process.exit(0);
+}).catch(error => {
+    console.error(error);
+    classifier.getClient().close();
+    process.exit(1);
 });
