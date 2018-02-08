@@ -1,11 +1,11 @@
 {
   "name": "jubatus-tutorial-node",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "main": "tutorial.js",
   "bin": "tutorial.js",
   "dependencies": {
     "bluebird": "^3.5.1",
-    "jubatus": "0.6.4",
+    "jubatus": "0.7.0",
     "minimist": "^1.2.0"
   },
   "repository": {
