@@ -4,7 +4,8 @@
   "main": "tutorial.js",
   "bin": "tutorial.js",
   "dependencies": {
-    "jubatus": "https://github.com/naokikimura/jubatus-node-client.git",
+    "bluebird": "^3.5.1",
+    "jubatus": "0.6.4",
     "minimist": "^1.2.0"
   },
   "repository": {

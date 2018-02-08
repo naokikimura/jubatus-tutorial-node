@@ -5,15 +5,16 @@ const readline = require('readline');
 const util = require('util');
 const jubatus = require('jubatus');
 const minimist = require('minimist');
+const bluebird = require('bluebird');
 
 const debug = util.debuglog('jubatus-tutorial-node');
 const enabled = debug.toString() !== (function () {}).toString();
 Object.defineProperty(debug, 'enabled', { get() { return enabled; } });
 
-const args = minimist(process.argv.slice(2), { default: { p: 9199, h: 'localhost', n: '', t: 0 } });
+const args = minimist(process.argv.slice(2), { default: { p: 9199, h: 'localhost', n: '', t: 0, c: 100 } });
 debug(args);
 
-const { p: port, h: host, n: name, t: timeout } = args,
+const { p: port, h: host, n: name, t: timeout, c: concurrency } = args,
     classifier = new jubatus.classifier.client.Classifier(port, host, name, timeout);
 
 classifier.getConfig().then(result => {
@@ -23,14 +24,21 @@ classifier.getConfig().then(result => {
 }).then(result => {
     debug(result);
 
-    // train
-
-    const results = [];
+    const lines = [];
     return new Promise((resolve, reject) => {
         readline.createInterface({ input: fs.createReadStream('train.dat') })
         .on('line', line => {
-            debug(line);
+            debug(`train - ${ line }`);
+            lines.push(line);
+        })
+        .on('close', () => resolve(lines))
+        .on('error', reject);
+    });
+}).then(lines => {
 
+    // train
+    return bluebird.map(lines, line => {
+        return new Promise((resolve, reject) => {
             const [ label, file ] = line.split(/,/, 2);
             fs.readFile(file, (error, buffer) => {
                 if (error) {
@@ -41,27 +49,30 @@ classifier.getConfig().then(result => {
                     const datum = [ stringValues ];
                     const labeledDatum = [ label, datum ];
                     const data = [ labeledDatum ];
-                    results.push(classifier.train(data));
+                    resolve(classifier.train(data));
                 }
             });
-        })
-        .on('close', () => {
-            resolve(Promise.all(results));
         });
-    });
+    }, { concurrency });
 }).then(responses => {
     const count = responses.map(([ result, msgid ]) => result).reduce((accumulator, current) => accumulator + current);
     debug(`train result: ${ count }`);
 
-    // classify
-
-    const results = [];
+    const lines = [];
     return new Promise((resolve, reject) => {
-        const stream = fs.createReadStream('test.dat');
-        readline.createInterface({ input: stream })
+        readline.createInterface({ input: fs.createReadStream('test.dat') })
         .on('line', line => {
-            debug(line);
+            debug(`classify - ${ line }`);
+            lines.push(line);
+        })
+        .on('close', () => resolve(lines))
+        .on('error', reject);
+    });
+}).then(lines => {
 
+    // classify
+    return bluebird.map(lines, line => {
+        return new Promise((resolve, reject) => {
             const [ label, file ] = line.split(/,/, 2);
             fs.readFile(file, (error, buffer) => {
                 if (error) {
@@ -70,7 +81,7 @@ classifier.getConfig().then(result => {
                     const message = buffer.toString();
                     const data = [ [ [ [ 'message', message ] ] ] ];
                     const promise = classifier.classify(data).then(response => {
-                        debug(response);
+                        if (debug.enabled) { debug(response); }
                         const [ result, msgid ] = response;
                         return result.map(estimates => {
                             const mostLikely = estimates
@@ -79,14 +90,11 @@ classifier.getConfig().then(result => {
                             return ({ label, mostLikely, valid : mostLikely.label === label });
                         });
                     });
-                    results.push(promise);
+                    resolve(promise);
                 }
             });
-        })
-        .on('close', () => {
-            resolve(Promise.all(results));
         });
-    });
+    }, { concurrency });
 }).then(results => {
     debug(results);
 
