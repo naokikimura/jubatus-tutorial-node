@@ -11,4 +11,4 @@ before_install:
   - tar -xzf 20news-bydate.tar.gz
   - sudo apt-get install jq
 script:
-  - env NODE_DEBUG=jubatus-tutorial-node node tutorial.js
+  - env NODE_DEBUG= node tutorial.js
