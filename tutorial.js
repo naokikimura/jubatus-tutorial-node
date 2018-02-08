@@ -7,11 +7,10 @@ const jubatus = require('jubatus');
 const minimist = require('minimist');
 
 const debug = util.debuglog('jubatus-tutorial-node');
-const { env: { DEBUG } } = (global.process || { env: {} });
-const enabled = /\jubatus-tutorial-node\b/.test(DEBUG);
+const enabled = debug.toString() !== (function () {}).toString();
 Object.defineProperty(debug, 'enabled', { get() { return enabled; } });
 
-const args = minimist(process.argv.slice(2), { p: 9199, h: 'localhost', n: '', t: 0 });
+const args = minimist(process.argv.slice(2), { default: { p: 9199, h: 'localhost', n: '', t: 0 } });
 debug(args);
 
 const { p: port, h: host, n: name, t: timeout } = args,
