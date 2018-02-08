@@ -4,7 +4,7 @@
   "main": "tutorial.js",
   "bin": "tutorial.js",
   "dependencies": {
-    "jubatus": "^0.6.4",
+    "jubatus": "https://github.com/naokikimura/jubatus-node-client.git",
     "minimist": "^1.2.0"
   },
   "repository": {
