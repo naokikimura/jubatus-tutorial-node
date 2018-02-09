@@ -12,6 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/naokikimura/jubatus-tutorial-node.git"
   },
+  "description": "Jubatus Tutorial in Node.js",
   "keywords": [
     "jubatus"
   ],
