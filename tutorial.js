@@ -27,12 +27,12 @@ classifier.getConfig().then(result => {
     const lines = [];
     return new Promise((resolve, reject) => {
         readline.createInterface({ input: fs.createReadStream('train.dat') })
-        .on('line', line => {
-            debug(`train - ${ line }`);
-            lines.push(line);
-        })
-        .on('close', () => resolve(lines))
-        .on('error', reject);
+            .on('line', line => {
+                debug(`train - ${ line }`);
+                lines.push(line);
+            })
+            .on('close', () => resolve(lines))
+            .on('error', reject);
     });
 }).then(lines => {
 
@@ -61,12 +61,12 @@ classifier.getConfig().then(result => {
     const lines = [];
     return new Promise((resolve, reject) => {
         readline.createInterface({ input: fs.createReadStream('test.dat') })
-        .on('line', line => {
-            debug(`classify - ${ line }`);
-            lines.push(line);
-        })
-        .on('close', () => resolve(lines))
-        .on('error', reject);
+            .on('line', line => {
+                debug(`classify - ${ line }`);
+                lines.push(line);
+            })
+            .on('close', () => resolve(lines))
+            .on('error', reject);
     });
 }).then(lines => {
 
