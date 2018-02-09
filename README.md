@@ -1,4 +1,4 @@
-jubatus-tutorial-node
+Jubatus Tutorial in Node.js
 =====================
 
 [![Build Status](https://travis-ci.org/naokikimura/jubatus-tutorial-node.svg?branch=master)](https://travis-ci.org/naokikimura/jubatus-tutorial-node)
@@ -6,7 +6,7 @@ jubatus-tutorial-node
 
 See [Jubatus Basic Tutorial](http://jubat.us/en/tutorial/tutorial.html)
 
-Quick Start
+Brief Usage
 --------------------
 
 ```bash
