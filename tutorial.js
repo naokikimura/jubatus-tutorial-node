@@ -3,7 +3,7 @@
 const fs = require('fs');
 const readline = require('readline');
 const util = require('util');
-const jubatus = require('jubatus');
+const { common: { types: { Datum } }, classifier: { types: { LabeledDatum }, client: { Classifier } } } = require('jubatus');
 const minimist = require('minimist');
 const bluebird = require('bluebird');
 
@@ -15,7 +15,7 @@ const args = minimist(process.argv.slice(2), { default: { p: 9199, h: 'localhost
 debug(args);
 
 const { p: port, h: host, n: name, t: timeout, c: concurrency } = args,
-    classifier = new jubatus.classifier.client.Classifier(port, host, name, timeout);
+    classifier = new Classifier(port, host, name, timeout);
 
 classifier.getConfig().then(result => {
     debug(result);
@@ -46,8 +46,8 @@ classifier.getConfig().then(result => {
                 } else {
                     const message = buffer.toString();
                     const stringValues = [ [ 'message', message ] ];
-                    const datum = [ stringValues ];
-                    const labeledDatum = [ label, datum ];
+                    const datum = new Datum(stringValues);
+                    const labeledDatum = new LabeledDatum(label, datum);
                     const data = [ labeledDatum ];
                     resolve(classifier.train(data));
                 }
@@ -79,13 +79,12 @@ classifier.getConfig().then(result => {
                     reject(error);
                 } else {
                     const message = buffer.toString();
-                    const data = [ [ [ [ 'message', message ] ] ] ];
+                    const data = [new Datum([['message', message]])];
                     const promise = classifier.classify(data).then(response => {
                         if (debug.enabled) { debug(response); }
                         const [ result, msgid ] = response;
                         return result.map(estimates => {
                             const mostLikely = estimates
-                                .map(([ label, score ]) => ({ label, score }))
                                 .reduce((accumulator, current) => current.score > accumulator.score ? current : accumulator);
                             return ({ label, mostLikely, valid : mostLikely.label === label });
                         });
