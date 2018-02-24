@@ -8,7 +8,7 @@ const minimist = require('minimist');
 const bluebird = require('bluebird');
 
 const debug = util.debuglog('jubatus-tutorial-node');
-const enabled = debug.toString() !== (function () {}).toString();
+const enabled = debug.toString() !== (function () { }).toString();
 Object.defineProperty(debug, 'enabled', { get() { return enabled; } });
 
 const args = minimist(process.argv.slice(2), { default: { p: 9199, h: 'localhost', n: '', t: 0, c: 100 } });
@@ -28,65 +28,62 @@ classifier.getConfig().then(result => {
     return new Promise((resolve, reject) => {
         readline.createInterface({ input: fs.createReadStream('train.dat') })
             .on('line', line => {
-                debug(`train - ${ line }`);
+                debug(`train - ${line}`);
                 lines.push(line);
             })
             .on('close', () => resolve(lines))
             .on('error', reject);
     });
 }).then(lines => {
-
     // train
     return bluebird.map(lines, line => {
         return new Promise((resolve, reject) => {
-            const [ label, file ] = line.split(/,/, 2);
+            const [label, file] = line.split(/,/, 2);
             fs.readFile(file, (error, buffer) => {
                 if (error) {
                     reject(error);
                 } else {
                     const message = buffer.toString();
-                    const stringValues = [ [ 'message', message ] ];
+                    const stringValues = [['message', message]];
                     const datum = new Datum(stringValues);
                     const labeledDatum = new LabeledDatum(label, datum);
-                    const data = [ labeledDatum ];
+                    const data = [labeledDatum];
                     resolve(classifier.train(data));
                 }
             });
         });
     }, { concurrency });
-}).then(responses => {
-    const count = responses.map(([ result, msgid ]) => result).reduce((accumulator, current) => accumulator + current);
-    debug(`train result: ${ count }`);
+}).then(results => {
+    const count = results.reduce((accumulator, current) => accumulator + current);
+    debug(`train result: ${count}`);
 
     const lines = [];
     return new Promise((resolve, reject) => {
         readline.createInterface({ input: fs.createReadStream('test.dat') })
             .on('line', line => {
-                debug(`classify - ${ line }`);
+                debug(`classify - ${line}`);
                 lines.push(line);
             })
             .on('close', () => resolve(lines))
             .on('error', reject);
     });
 }).then(lines => {
-
     // classify
     return bluebird.map(lines, line => {
         return new Promise((resolve, reject) => {
-            const [ label, file ] = line.split(/,/, 2);
+            const [label, file] = line.split(/,/, 2);
             fs.readFile(file, (error, buffer) => {
                 if (error) {
                     reject(error);
                 } else {
                     const message = buffer.toString();
                     const data = [new Datum([['message', message]])];
-                    const promise = classifier.classify(data).then(response => {
-                        if (debug.enabled) { debug(response); }
-                        const [ result, msgid ] = response;
+                    const promise = classifier.classify(data).then(result => {
+                        if (debug.enabled) { debug(result); }
                         return result.map(estimates => {
                             const mostLikely = estimates
                                 .reduce((accumulator, current) => current.score > accumulator.score ? current : accumulator);
-                            return ({ label, mostLikely, valid : mostLikely.label === label });
+                            return ({ label, mostLikely, valid: mostLikely.label === label });
                         });
                     });
                     resolve(promise);
