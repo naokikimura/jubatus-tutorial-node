@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const readline = require('readline');
+const path = require('path');
 const util = require('util');
 const { common: { types: { Datum } }, classifier: { types: { LabeledDatum }, client: { Classifier } } } = require('jubatus');
 const minimist = require('minimist');
 const bluebird = require('bluebird');
 
 const debug = util.debuglog('jubatus-tutorial-node');
-const enabled = debug.toString() !== (function () { }).toString();
-Object.defineProperty(debug, 'enabled', { get() { return enabled; } });
 
 const args = minimist(process.argv.slice(2), { default: { p: 9199, h: 'localhost', n: '', t: 0, c: 100 } });
 debug(args);
@@ -17,91 +15,61 @@ debug(args);
 const { p: port, h: host, n: name, t: timeout, c: concurrency } = args,
     classifier = new Classifier(port, host, name, timeout);
 
-classifier.getConfig().then(result => {
-    debug(result);
+function promisify(fn) {
+    return (...args) => new Promise((resolve, reject) =>
+        fn.apply(null, args.concat((error, result) => error ? reject(error) : resolve(result))));
+}
 
-    return classifier.getStatus();
-}).then(result => {
-    debug(result);
+const readFile = promisify(fs.readFile);
+const list = (dirname) => {
+    const readDir = promisify(fs.readdir);
+    const find = (dirname) => readDir(dirname).then(files => files.map(file => path.join(dirname, file)));
+    const flatten = (array) => array.reduce((accumulator, current) => accumulator.concat(current));
+    const mapStat = (file, iteratee) => 
+        new Promise((resolve, reject) => fs.stat(file, (error, stat) => error ? reject(error) : resolve(iteratee(stat, file))));
+    const filterStat = (files, predicate) => 
+        Promise.all(files.map(file => mapStat(file, (stat) => predicate(stat) && file))).then(files => files.filter(file => file));
+    return find(dirname)
+        .then(files => filterStat(files, (stat) => stat.isDirectory))
+        .then(directories => Promise.all(directories.map(directory => find(directory))))
+        .then(files => filterStat(flatten(files), (stat) => stat.isFile))
+        .then(files => files.map(file => ({ label: path.basename(path.dirname(file)), file })));
+};
 
-    const lines = [];
-    return new Promise((resolve, reject) => {
-        readline.createInterface({ input: fs.createReadStream('train.dat') })
-            .on('line', line => {
-                debug(`train - ${line}`);
-                lines.push(line);
-            })
-            .on('close', () => resolve(lines))
-            .on('error', reject);
-    });
-}).then(lines => {
+classifier.clear().then(result => {
+    debug(result);
+    return list('20news-bydate-train');
+}).then(labeledFiles => 
     // train
-    return bluebird.map(lines, line => {
-        return new Promise((resolve, reject) => {
-            const [label, file] = line.split(/,/, 2);
-            fs.readFile(file, (error, buffer) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    const message = buffer.toString();
-                    const stringValues = [['message', message]];
-                    const datum = new Datum(stringValues);
-                    const labeledDatum = new LabeledDatum(label, datum);
-                    const data = [labeledDatum];
-                    resolve(classifier.train(data));
-                }
-            });
-        });
-    }, { concurrency });
-}).then(results => {
+    bluebird.map(labeledFiles, ({ label, file }) => 
+        readFile(file).then(buffer => {
+            const message = buffer.toString();
+            const datum = new Datum().addString('message', message);
+            const labeledDatum = new LabeledDatum(label, datum);
+            const data = [labeledDatum];
+            return classifier.train(data);
+        }), { concurrency })
+).then(results => {
     const count = results.reduce((accumulator, current) => accumulator + current);
     debug(`train result: ${count}`);
-
-    const lines = [];
-    return new Promise((resolve, reject) => {
-        readline.createInterface({ input: fs.createReadStream('test.dat') })
-            .on('line', line => {
-                debug(`classify - ${line}`);
-                lines.push(line);
-            })
-            .on('close', () => resolve(lines))
-            .on('error', reject);
-    });
-}).then(lines => {
+    return list('20news-bydate-test');
+}).then(labeledFiles => 
     // classify
-    return bluebird.map(lines, line => {
-        return new Promise((resolve, reject) => {
-            const [label, file] = line.split(/,/, 2);
-            fs.readFile(file, (error, buffer) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    const message = buffer.toString();
-                    const data = [new Datum([['message', message]])];
-                    const promise = classifier.classify(data).then(result => {
-                        if (debug.enabled) { debug(result); }
-                        return result.map(estimates => {
-                            const mostLikely = estimates
-                                .reduce((accumulator, current) => current.score > accumulator.score ? current : accumulator);
-                            return ({ label, mostLikely, valid: mostLikely.label === label });
-                        });
-                    });
-                    resolve(promise);
-                }
+    bluebird.map(labeledFiles, ({ label, file }) => 
+        readFile(file).then(buffer => {
+            return classifier.classify([new Datum().addString('message', buffer.toString())]).then(result => {
+                debug(result);
+                return result.map(estimates => {
+                    const mostLikely = estimates
+                        .reduce((accumulator, current) => current.score > accumulator.score ? current : accumulator);
+                    return ({ label, mostLikely, valid: mostLikely.label === label });
+                });
             });
-        });
-    }, { concurrency });
-}).then(results => {
-    debug(results);
-
-    results.forEach(result => {
-        console.log(JSON.stringify(result));
-    });
-
-    classifier.getClient().close();
+        }), { concurrency })
+).then(results => {
+    results.forEach(result => console.log(JSON.stringify(result)));
     process.exit(0);
 }).catch(error => {
     console.error(error);
-    classifier.getClient().close();
     process.exit(1);
 });
