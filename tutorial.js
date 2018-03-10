@@ -35,6 +35,8 @@ const list = (dirname) => {
         .then(files => filterStat(flatten(files), (stat) => stat.isFile))
         .then(files => files.map(file => ({ label: path.basename(path.dirname(file)), file })));
 };
+const maxBy = (array, iteratee) =>
+    array.reduce((accumulator, current) => iteratee(current) > iteratee(accumulator) ? current : accumulator);
 
 classifier.clear().then(result => {
     debug(result);
@@ -48,7 +50,7 @@ classifier.clear().then(result => {
             const labeledDatum = new LabeledDatum(label, datum);
             const data = [labeledDatum];
             return classifier.train(data);
-        }), { concurrency })
+        }), { concurrency: concurrency * 3 })
 ).then(results => {
     const count = results.reduce((accumulator, current) => accumulator + current);
     debug(`train result: ${count}`);
@@ -57,11 +59,10 @@ classifier.clear().then(result => {
     // classify
     bluebird.map(labeledFiles, ({ label, file }) => 
         readFile(file).then(buffer => {
-            return classifier.classify([new Datum().addString('message', buffer.toString())]).then(result => {
-                debug(result);
-                return result.map(estimates => {
-                    const mostLikely = estimates
-                        .reduce((accumulator, current) => current.score > accumulator.score ? current : accumulator);
+            return classifier.classify([new Datum().addString('message', buffer.toString())]).then(results => {
+                debug(results);
+                return results.map(estimates => {
+                    const mostLikely = maxBy(estimates, (estimate) => estimate.score);
                     return ({ label, mostLikely, valid: mostLikely.label === label });
                 });
             });
