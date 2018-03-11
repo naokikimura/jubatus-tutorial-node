@@ -43,7 +43,7 @@ classifier.clear().then(result => {
             const labeledDatum = new LabeledDatum(label, datum);
             const data = [labeledDatum];
             return classifier.train(data);
-        }), { concurrency: concurrency * 3 })
+        }), { concurrency })
 ).then(results => {
     const count = results.reduce((accumulator, current) => accumulator + current);
     debug(`train results: ${count}`);
