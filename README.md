@@ -27,7 +27,7 @@ tar -xvzf 20news-bydate.tar.gz
 # brew install jubatus --use-clang
 jubaclassifier -D -f config.json
 
-node tutorial.js
+npm start
 ```
 
 ## Requires ##

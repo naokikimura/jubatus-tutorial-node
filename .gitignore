@@ -20,3 +20,5 @@ node_modules
 20news-bydate-train/
 
 .DS_Store
+
+dist/

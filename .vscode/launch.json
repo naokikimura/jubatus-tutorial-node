@@ -8,7 +8,7 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "program": "${workspaceFolder}/tutorial.js",
+      "program": "${workspaceFolder}/dist/tutorial.js",
       "env": {
         "NODE_DEBUG": "jubatus-tutorial-node"
       }
