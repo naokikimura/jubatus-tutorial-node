@@ -33,7 +33,7 @@ npm start
 ## Requires ##
 
 - [Jubatus](http://jubat.us/en/)
-- [Node.js](https://nodejs.or]) v6+
+- [Node.js](https://nodejs.or]) v8+
 
 ## See alse ##
 
