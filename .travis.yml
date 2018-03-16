@@ -12,7 +12,7 @@ before_install:
 - tar -xzf 20news-bydate.tar.gz
 - sudo apt-get install jq
 script:
-- NODE_DEBUG=jubatus-tutorial-node node tutorial.js -c 1 > results.json
+- NODE_DEBUG=jubatus-tutorial-node npm start -- -c 1 > results.json
 - cat results.json | jq '.[]|.valid' | sort | uniq -c |
   awk '{v[$2]=$1}END{exit!(v["true"]>v["false"])}'
 notifications:
