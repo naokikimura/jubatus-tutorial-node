@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as util from 'util';
-import * as jubatus from 'jubatus';
+import fs from 'fs';
+import path from 'path';
+import util from 'util';
+import jubatus from 'jubatus';
 import minimist from 'minimist';
 import bluebird from 'bluebird';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 const debug = util.debuglog('jubatus-tutorial-node');
 const { common: { types: { Datum } }, classifier: { types: { LabeledDatum }, client: { Classifier } } } = jubatus;
