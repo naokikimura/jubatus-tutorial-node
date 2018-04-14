@@ -15,7 +15,7 @@ before_install:
 before_script:
 - if [ $(echo "$(npm -v 2>&1 | cut -d. -f-2) < 4.2" | bc) -eq 1 ]; then npm run prepare; fi
 script:
-- NODE_DEBUG=jubatus-tutorial-node node ./dist/tutorial.js -c 1 > results.json
+- node ./dist/tutorial.js -c ${CONCURRENCY:-100} > results.json
 - cat results.json | jq '.[]|.valid' | sort | uniq -c |
   awk '{v[$2]=$1}END{exit!(v["true"]>v["false"])}'
 notifications:
