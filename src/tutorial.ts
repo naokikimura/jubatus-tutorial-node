@@ -67,6 +67,7 @@ classifier.clear().then(result => {
     results.forEach(result => console.log(JSON.stringify(result)));
     process.exit(0);
 }).catch(error => {
+    debug(error);
     console.error(error);
     process.exit(1);
 });
