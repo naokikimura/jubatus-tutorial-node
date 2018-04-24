@@ -4,7 +4,7 @@
   "version": "0.6.3",
   "dependencies": {
     "bluebird": "^3.5.1",
-    "jubatus": "^0.9.8",
+    "jubatus": "^0.9.9",
     "lodash": "^4.17.5",
     "minimist": "^1.2.0"
   },
@@ -24,11 +24,11 @@
   "homepage": "https://github.com/naokikimura/jubatus-tutorial-node#readme",
   "devDependencies": {
     "@types/bluebird": "^3.5.20",
-    "@types/lodash": "^4.14.106",
+    "@types/lodash": "^4.14.107",
     "@types/minimist": "^1.2.0",
     "@types/msgpack-lite": "^0.1.6",
-    "@types/node": "^9.6.4",
-    "typescript": "^2.8.1"
+    "@types/node": "^9.6.6",
+    "typescript": "^2.8.3"
   },
   "scripts": {
     "prepare": "tsc",
