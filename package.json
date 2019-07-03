@@ -6,7 +6,8 @@
     "bluebird": "^3.5.1",
     "jubatus": "^0.9.9",
     "lodash": "^4.17.11",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "snyk": "^1.189.0"
   },
   "repository": {
     "type": "git",
@@ -31,7 +32,9 @@
     "typescript": "^2.8.3"
   },
   "scripts": {
-    "prepare": "tsc",
-    "start": "node ./dist/tutorial.js"
-  }
+    "prepare": "npm run snyk-protect; tsc",
+    "start": "node ./dist/tutorial.js",
+    "snyk-protect": "snyk protect"
+  },
+  "snyk": true
 }
