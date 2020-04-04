@@ -6,7 +6,7 @@
     "bluebird": "^3.5.1",
     "jubatus": "^0.9.9",
     "lodash": "^4.17.11",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.3"
   },
   "repository": {
     "type": "git",
